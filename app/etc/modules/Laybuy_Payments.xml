@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Laybuy_Payments>
+            <active>true</active>
+            <codePool>community</codePool>
+        </Laybuy_Payments>
+    </modules>
+</config>
