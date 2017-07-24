@@ -9,10 +9,10 @@
 // can this fail?
 $total = Mage::getModel("checkout/session")->getQuote()->getGrandTotal();
 
-$laylay_payments = FALSE;
+$laybuy_payments = FALSE;
 
 if($total){
-    $laylay_payments = number_format( ($total / 6), 2, '.', ',');
+    $laybuy_payments = number_format( ($total / 6), 2, '.', ',');
 }
 
 ?>
@@ -20,8 +20,8 @@ if($total){
     <li>
         <div style="padding: 10px 0;">
             <img style="display:inline-block;max-width: 200px;  vertical-align: middle" src="https://www.laybuy.com/images/laybuy-button.png" alt="">
-            <?php if($laylay_payments): ?>
-            <h4 style="display:inline-block;padding-left: 15px">6 interest free payments from $<?= $laylay_payments; ?></h4>
+            <?php if($laybuy_payments): ?>
+            <h4 style="display:inline-block;padding-left: 15px">6 interest free payments from $<?= $laybuy_payments; ?></h4>
             <?php endif; ?>
         </div>
     
