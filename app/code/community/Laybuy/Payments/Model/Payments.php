@@ -90,6 +90,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     protected $restClient;
     
+    protected $endpoint;
+    
     
     public function _construct() {
         parent::_construct();
@@ -210,10 +212,12 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $this->laybuy_sandbox = $this->getConfigData('sandbox_mode') == 1;
         
         if ($this->laybuy_sandbox) {
+            $this->endpoint          = self::LAYBUY_SANDBOX_URL;
             $this->laybuy_merchantid = $this->getConfigData('sandbox_merchantid');
             $this->laybuy_apikey     = $this->getConfigData('sandbox_apikey');
         }
         else {
+            $this->endpoint          = self::LAYBUY_LIVE_URL;
             $this->laybuy_merchantid = $this->getConfigData('live_merchantid');
             $this->laybuy_apikey     = $this->getConfigData('live_apikey');
         }
@@ -228,7 +232,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         }
         
         try {
-            $this->restClient = new Zend_Rest_Client(self::LAYBUY_SANDBOX_URL); //TODO
+            $this->restClient = new Zend_Rest_Client($this->endpoint);
             $this->restClient->getHttpClient()->setAuth($this->laybuy_merchantid, $this->laybuy_apikey, Zend_Http_Client::AUTH_BASIC);
             
         } catch (Exception $e) {
