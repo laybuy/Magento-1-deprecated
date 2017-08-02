@@ -104,8 +104,9 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         // from the frontend tag in the modules config.xml
         
         $order = $this->_makeLaybuyOrder();
-        //Mage::log($order);
-        
+        Mage::log('---------------- LAYBUY ORDER -------------------');
+        Mage::log($order);
+        Mage::log('---------------- /LAYBUY ORDER -------------------');
         return $this->getLaybuyRedirectUrl($order);
     }
     
@@ -185,7 +186,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     
     public function isAvailable($quote = NULL) {
-        return TRUE;
+        
+        return $this->getConfigData('active')? true:false;
     }
     
     /**
@@ -197,11 +199,12 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
      * @return void
      */
     public function initialize($paymentAction, $stateObject) {
+        
         $stateObject->setState($this->getConfigData('unpaid_order_status') );
         $stateObject->setStatus($this->getConfigData('unpaid_order_status') );
         $stateObject->setIsNotified(FALSE);
         Mage::log(__METHOD__ ." " . $this->getConfigData('unpaid_order_status') );
-        Mage::log(__METHOD__ . ' INITIALISED');
+        
         
     }
     
