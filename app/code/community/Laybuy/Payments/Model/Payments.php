@@ -87,7 +87,6 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
      */
     protected $laybuy_apikey;
     
-    
     protected $restClient;
     
     protected $endpoint;
@@ -95,8 +94,6 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     public function _construct() {
         parent::_construct();
-        
-        
     }
     
     // main entry point
@@ -106,7 +103,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $order = $this->_makeLaybuyOrder();
         Mage::log('---------------- LAYBUY ORDER -------------------');
         Mage::log($order);
-        Mage::log('---------------- /LAYBUY ORDER -------------------');
+        Mage::log('---------------- /LAYBUY ORDER ------------------');
         return $this->getLaybuyRedirectUrl($order);
     }
     
@@ -161,13 +158,15 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $order->items = [];
         
         foreach ($quote->getAllVisibleItems() as $id => $item) {
+            
             /* @var @item \Mage_Sales_Model_Quote_Item */
             
             $order->items[$id]              = new stdClass();
             $order->items[$id]->id          = $item->getId();
             $order->items[$id]->description = $item->getName();
             $order->items[$id]->quantity    = $item->getQty();
-            $order->items[$id]->price       = $item->getPrice();
+            //$order->items[$id]->price = $item->getPrice();
+            $order->items[$id]->price       = $item->getPriceInclTax();
             
         }
         
