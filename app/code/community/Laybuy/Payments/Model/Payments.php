@@ -121,9 +121,10 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         // data
         
         /* @var $address \Mage_Customer_Model_Address */
-        $address = $customer->getPrimaryBillingAddress();
+        
+        $address = $session->getQuote()->getBillingAddress();
         if(!$address){
-            $address = $session->getQuote()->getBillingAddress();
+            $address = $customer->getPrimaryBillingAddress();
         }
     
         //Mage::log($address);
@@ -145,7 +146,15 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $order->customer->firstName = $quote->getCustomerFirstname();
         $order->customer->lastName  = $quote->getCustomerLastname();
         $order->customer->email     = $quote->getCustomerEmail();
-        $order->customer->phone     = $address->getTelephone();
+       
+        $phone = $address->getTelephone();
+        
+        if ($phone == '' || strlen( preg_replace('/[^0-9]/i', '', $phone ) ) <= 3) {
+            $phone = '00000000';
+        }
+        
+        $order->customer->phone = $phone;
+        
         
         $street                          = $address->getStreet();
         $order->billingAddress           = new stdClass();
@@ -165,8 +174,15 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             $order->items[$id]->id          = $item->getId();
             $order->items[$id]->description = $item->getName();
             $order->items[$id]->quantity    = $item->getQty();
-            //$order->items[$id]->price = $item->getPrice();
-            $order->items[$id]->price       = $item->getPriceInclTax();
+            
+            
+            if( $item->getDiscountAmount() ){
+                $order->items[$id]->price = $item->getPriceInclTax() - $item->getDiscountAmount();
+            }
+            else {
+                $order->items[$id]->price = $item->getPriceInclTax() ;
+            }
+            
             
         }
         
@@ -283,8 +299,46 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             return $body->paymentUrl;
         }
         else {
-            // TODO
-            return NULL;
+          
+            
+            Mage::log("LAYBUY: ORDER CREATE FAILED (" . $body->result . " -> " . $body->error . ") ");
+            $quote = $this->getInfoInstance()->getQuote();
+            
+           /*
+           not working yet
+           if ($quote ) {
+        
+               
+                $quote       = $this->getInfoInstance()->getQuote();
+                $quote->setIsActive(TRUE)->save();
+    
+                Mage::log("LAYBUY: ORDER CREATE FAILED, found quote ". $quote->getId());
+    
+                Mage::log("-------------- Quote -----------------");
+                Mage::log($quote);
+                Mage::log("--------------/Quote -----------------");
+                
+                // Let customer know what's happened
+                Mage::getSingleton('core/session')->addError("Your Laybuy payment had an error: " . $body->error);
+        
+    
+                //$this->_redirect('checkout/onepage'); //Redirect to cart
+                Mage::app()->getFrontController()->getResponse()->setRedirect(Mage::getUrl('checkout/onepage', ['_secure' => TRUE]));
+                Mage::app()->getResponse()->sendResponse();
+    
+                return;
+            }
+    
+            // could not get a valid quote, send customer to fail
+            Mage::getSingleton('core/session')->addError("Your Laybuy payment had and error, sorry we could not find your cart.");
+    
+            Mage::log("LAYBUY: ORDER CREATE FAILED, NO QUOTE FOUND "  );
+    
+    
+            Mage::app()->getFrontController()->getResponse()->setRedirect(Mage::getUrl('ccheckout/onepage/failure', ['_secure' => TRUE]));
+            Mage::app()->getResponse()->sendResponse();*/
+            
+            return;
         }
         
         
