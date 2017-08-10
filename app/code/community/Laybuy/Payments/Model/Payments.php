@@ -198,7 +198,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         }
         
 		Mage::log(__METHOD__ . ' items total: ' . $totalOrderValue);
-		$totalOrderValue += $shipping->getShippingAmount(); // add shipping to total order value.
+		$totalOrderValue += $shipping->getShippingInclTax(); // add shipping to total order value.
 		
 		if( floatval($totalOrderValue) < floatval( $quote->getGrandTotal()) ){
             Mage::log(__METHOD__ . ' items total is LESS than getGrandTotal:  ' . $totalOrderValue . " < " . $quote->getGrandTotal() );
@@ -212,13 +212,13 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
 			$order->items[$id]->price       = floatval($quote->getGrandTotal()) - floatval($totalOrderValue); // a make a negative value
 		}
         
-        if ($shipping->getShippingAmount()) {
+        if ($shipping->getShippingInclTax()) {
             $next                             = count($order->items); // count starts at 1
             $order->items[$next]              = new stdClass();
             $order->items[$next]->id          = 'SHIPPING';
             $order->items[$next]->description = $shipping->getShippingDescription();
             $order->items[$next]->quantity    = 1;
-            $order->items[$next]->price       = $shipping->getShippingAmount();
+            $order->items[$next]->price       = $shipping->getShippingInclTax();
         }
         
         return $order;
