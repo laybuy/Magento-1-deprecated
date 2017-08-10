@@ -42,7 +42,7 @@
                         <unpaid_order_status translate="label">
                             <label>Unpaid Order Status</label>
                             <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status</source_model>
+                            <source_model>payments/system_pendingOrder</source_model>
                             <sort_order>55</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>

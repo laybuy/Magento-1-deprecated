@@ -149,12 +149,11 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
        
         $phone = $address->getTelephone();
         
-        if ($phone == '' || strlen( preg_replace('/[^0-9]/i', '', $phone ) ) <= 3) {
+        if ($phone == '' || strlen( preg_replace('/[^0-9]/i', '', $phone ) ) <= 6) {
             $phone = '00000000';
         }
         
         $order->customer->phone = $phone;
-        
         
         $street                          = $address->getStreet();
         $order->billingAddress           = new stdClass();
@@ -166,6 +165,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
         $order->items = [];
         
+		$totalOrderValue = 0;
+		
         foreach ($quote->getAllVisibleItems() as $id => $item) {
             
             /* @var @item \Mage_Sales_Model_Quote_Item */
@@ -174,17 +175,42 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             $order->items[$id]->id          = $item->getId();
             $order->items[$id]->description = $item->getName();
             $order->items[$id]->quantity    = $item->getQty();
+            //$order->items[$id]->price = $item->getPrice();
+    
+    
+            Mage::log(__METHOD__ . 'ITEM ['. $item->getId().']: price: ' . $item->getPrice()
+                      . " getPriceInclTax:" .  $item->getPriceInclTax()
+                      . " getFinalPrice:" . $item->getFinalPrice()
+                      . " getDiscountAmount:" . $item->getDiscountAmount()
+                       );
             
             
             if( $item->getDiscountAmount() ){
-                $order->items[$id]->price = $item->getPriceInclTax() - $item->getDiscountAmount();
+                $price = $item->getPriceInclTax() - $item->getDiscountAmount();
             }
             else {
-                $order->items[$id]->price = $item->getPriceInclTax() ;
+                $price = $item->getPriceInclTax() ;
             }
             
+            $order->items[$id]->price       = $price;
+            $totalOrderValue += $price;
             
         }
+        
+		Mage::log(__METHOD__ . ' items total: ' . $totalOrderValue);
+		$totalOrderValue += $shipping->getShippingAmount(); // add shipping to total order value.
+		
+		if( floatval($totalOrderValue) < floatval( $quote->getGrandTotal()) ){
+            Mage::log(__METHOD__ . ' items total is LESS than getGrandTotal:  ' . $totalOrderValue . " < " . $quote->getGrandTotal() );
+            Mage::log('Add discount line...');
+			
+			$id                             = count($order->items); // count starts at 1
+			$order->items[$id]              = new stdClass();
+            $order->items[$id]->id          = 'DISCOUNT';
+            $order->items[$id]->description = 'Discount';
+            $order->items[$id]->quantity    = 1;
+			$order->items[$id]->price       = floatval($quote->getGrandTotal()) - floatval($totalOrderValue); // a make a negative value
+		}
         
         if ($shipping->getShippingAmount()) {
             $next                             = count($order->items); // count starts at 1
