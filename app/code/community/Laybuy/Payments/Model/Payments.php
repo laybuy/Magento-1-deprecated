@@ -91,6 +91,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     protected $endpoint;
     
+    protected $errors = [];
+    
     
     public function _construct() {
         parent::_construct();
@@ -104,12 +106,28 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         Mage::log('---------------- LAYBUY ORDER -------------------');
         Mage::log($order);
         Mage::log('---------------- /LAYBUY ORDER ------------------');
+    
+    
+        if (count($this->errors)) {
+            $message = join("\n", $this->errors);
+            Mage::log('---------------- LAYBUY ERRORS -------------------');
+            Mage::log($order);
+            Mage::log('---------------- /LAYBUY ERRORS ------------------');
+    
+            $quote = $this->getInfoInstance()->getQuote();
+            $quote->setIsActive(TRUE)->save();
+            
+            Mage::throwException($message);
+            exit();
+        }
+        
+    
         return $this->getLaybuyRedirectUrl($order);
     }
     
     
     private function _makeLaybuyOrder() {
-    
+       
         $session = Mage::getSingleton('checkout/session');
        
         
@@ -135,6 +153,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             $shipping = $session->getQuote()->getShippingAddress();
         }
         
+        //$this->errors[] = 'This is another error.';
         $order = new stdClass();
         
         $order->amount            = $quote->getGrandTotal();
@@ -149,8 +168,9 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
        
         $phone = $address->getTelephone();
         
-        if ($phone == '' || strlen( preg_replace('/[^0-9]/i', '', $phone ) ) <= 6) {
-            $phone = '00000000';
+        
+        if ($phone == '' || strlen(preg_replace('/[^0-9+]/i', '', $phone)) <= 6) {
+            $this->errors[] = 'Please provide a valid New Zealand phone number.';
         }
         
         $order->customer->phone = $phone;
