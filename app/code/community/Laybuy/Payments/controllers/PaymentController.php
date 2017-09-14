@@ -30,7 +30,8 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
         $session = Mage::getSingleton('checkout/session');
         /* @var  $laybuyPayment  \Laybuy_Payments_Model_Payments */
         $laybuyPayment = Mage::getSingleton('payments/payments'); // Laybuy_Payments_Model_Payments
-    
+       
+        
         // we are always in session with Laybuy
         // Mage::log("response action ");
         
@@ -76,13 +77,25 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                 //Mage::log($laybuy_order);
                 
                 $order_id = $laybuy_order->merchantReference;
-                
+    
                 $session->setLastOrderId($order_id)
                         ->setLastRealOrderId((string) $order_id);
                 
                 /* @var $order \Mage_Sales_Model_Order */
                 $order = Mage::getModel('sales/order');
                 $order->loadByIncrementId($order_id);
+                
+                if($order->isEmpty()){
+                    $order_id = $session->getLastRealOrderId();
+                    $order->loadByIncrementId($order_id);
+    
+                    if($order->isEmpty()) {
+                        throw Mage::exception('Laybuy_Payments', "Order can not be retrieved: " . $order_id);
+                    }
+                }
+                
+                
+                
                 $order->addStatusHistoryComment("Laybuy payment approved." , FALSE);
     
                 $order->sendNewOrderEmail();
@@ -104,7 +117,7 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                 }
     
                 $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, TRUE, 'Laybuy has approved payment, with Laybuy order id: ' . $layby_order_id );
-    
+                
                 $order->save();
                 
     
