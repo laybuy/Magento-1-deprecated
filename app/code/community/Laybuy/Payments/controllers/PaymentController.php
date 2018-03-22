@@ -33,6 +33,8 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
     
     protected $laybuy_order = NULL;
     
+    protected $tag = NULL;
+    
     
     // The response action is triggered when Laybuy sends back a response after processing the customer's payment
     //  GET /laybuypayments/payment/response/?status=SUCCESS&token=z8jFQf31BbRN3fEmjUbrxYZhQ6bwTtNNXoyCTpjo
@@ -58,7 +60,7 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
         //
         if ($status == 'SUCCESS') {
             
-            $this->dbg("LAYBUY: CUSTOMER RETURNS WITH SUCCESSFUL STATUS");
+            $this->dbg("LAYBUY: CUSTOMER RETURNS");
             
             // setup our client to talk with Laybuy
             $client = $this->getLaybuyClient();
@@ -72,9 +74,11 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
             // finiase order
             $response = $client->restPost('/order/confirm', json_encode($laybuy));
             $body     = json_decode($response->getBody());
-            
-            //Mage::log($body);
-            
+    
+    
+            $this->dbg($body, "LAYBUY: CONFIRM RESPONSE ");
+            $this->dbg("LAYBUY: /CONFIRM RESPONSE");
+    
             // laybuy confirmed our order
             // we can setup teh invoice and mark the order as processing
             if ($body->result == 'SUCCESS') {
@@ -135,11 +139,56 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                     $this->_redirect('checkout/onepage/success', ['_secure' => FALSE]);
                 }
             }
-            
-            
+
+
+            // laybuy had an error confirming the order -- elseif ($body->result == 'ERROR') {
+            else {
+    
+                $this->dbg("LAYBUY: CONFIRM ERROR: " . $body->result);
+        
+                // setup our client to talk with Laybuy
+                $client = $this->getLaybuyClient();
+        
+                // finalise the order
+                $laybuy        = new stdClass();
+                $laybuy->token = $this->getRequest()->getParam('token');
+        
+                // cancel order
+                $response = $client->restGet('/order/cancel/' . $laybuy->token); // is this required
+                
+                
+                $order_id    = $this->session->getLastRealOrderId();
+                $this->order = Mage::getModel('sales/order');
+                $this->order->loadByIncrementId($order_id);
+        
+                $this->orderDelete();
+                
+                // recreate the cart (quote) if posiable
+                if ($this->getLastQuoteId()) {
+        
+                    /** sets $this->quote \Mage_Sales_Model_Quote */
+                    $this->setQuote($this->getLastQuoteId());
+        
+                    // Let customer know what's happened
+                    if(isset($body->error) && $body->error){
+                        Mage::getSingleton('core/session')->addError($body->error);
+                    }
+                    
+                    $this->_redirect('checkout/onepage'); //Redirect to checkout
+                    return;
+                }
+                
+                // could not get a valid quote, send customer to fail
+                if (isset($body->error) && $body->error) {
+                    Mage::getSingleton('core/session')->addError($body->error);
+                }
+                
+                $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
+                return;
+            }
         }
         
-        // USER cncelled their payment process at Laybuy, they may wont to continue
+        // USER cancelled their payment process at Laybuy, they may wont to continue
         // https://magento.dev/laybuypayments/payment/response/?status=CANCELLED&token=PXWlCHfjRGIV2AGXM6dsdTMuKPeOOQwXwRpAtZ3s
         elseif ($status == 'CANCELLED') {
             //user cancel, let them try again?
@@ -153,10 +202,9 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
             $laybuy        = new stdClass();
             $laybuy->token = $this->getRequest()->getParam('token');
     
-            //Mage::log(json_encode($laybuy));
-    
             // cancel order
             $response = $client->restGet('/order/cancel/' . $laybuy->token);
+            
             
             $order_id = $this->session->getLastRealOrderId();
             $this->order = Mage::getModel('sales/order');
@@ -183,9 +231,20 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
             $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
             
         }
-        else {
+
+
+        // PAYMENT was DECLINED
+        // https://magento.dev/laybuypayments/payment/response/?status=DECLINED&token=PXWlCHfjRGIV2AGXM6dsdTMuKPeOOQwXwRpAtZ3s
+        elseif ($status == 'DECLINED') {
+            //- credit check decision was 'DECLINE'
+            //- drivers licence check was 'DECLINE' (not used)
+            //- customer's credit limit reached
+            //- instalment value is too low (min is currently $0)
     
-            $this->dbg("LAYBUY: PAYMENT DELCINED OR CREDIT CHECK FAILED");
+            //- customer's 1st installment was declined
+            
+    
+            $this->dbg("LAYBUY: DECLINED ");
     
             // setup our client to talk with Laybuy
             $client = $this->getLaybuyClient();
@@ -194,8 +253,46 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
             $laybuy        = new stdClass();
             $laybuy->token = $this->getRequest()->getParam('token');
     
+            //Mage::log(json_encode($laybuy));
+    
+            // no cancel order required
+            // $response = $client->restGet('/order/cancel/' . $laybuy->token);
+    
+            $order_id    = $this->session->getLastRealOrderId();
+            $this->order = Mage::getModel('sales/order');
+            $this->order->loadByIncrementId($order_id);
+    
+            $this->orderDelete();
+    
+            // recreate the cart (quote) if posiable
+            if ($this->getLastQuoteId()) {
+        
+                /** sets $this->quote \Mage_Sales_Model_Quote */
+                $this->setQuote($this->getLastQuoteId());
+        
+                // Let customer know what's happened
+                Mage::getSingleton('core/session')->addError("Your Laybuy payment has been declined.");
+        
+                $this->_redirect('checkout/onepage'); //Redirect to checkout
+                return;
+            }
+    
+            // could not get a valid quote, send customer to fail
+            Mage::getSingleton('core/session')->addError("Your Laybuy payment has been declined, sorry we could not find your cart.");
+    
+            $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
+    
+        }
+        else {
+    
+            $this->dbg("LAYBUY: GENERAL FAIL");
+    
+            // finalise the order
+            $laybuy        = new stdClass();
+            $laybuy->token = $this->getRequest()->getParam('token');
+    
             // cancel order
-            $response = $client->restGet('/order/cancel/' . $laybuy->token);
+            // $response = $client->restGet('/order/cancel/' . $laybuy->token);
             
             $order_id    = $this->session->getLastRealOrderId();
             $this->order = Mage::getModel('sales/order');
@@ -203,20 +300,7 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
     
             $this->orderDelete();
             
-            
-            if ($this->getLastQuoteId()) {
-    
-                /** sets $this->quote \Mage_Sales_Model_Quote */
-                $this->setQuote($this->getLastQuoteId());
-    
-                // Let customer know its bad
-                Mage::getSingleton('core/session')->addError("Sorry, you have been declined a Laybuy.");
-                
-                $this->_redirect('checkout/onepage'); //Redirect to cart
-                return;
-            }
-            
-            Mage::getSingleton('core/session')->addError("Sorry, you have been declined a Laybuy and we could not find your cart.");
+            Mage::getSingleton('core/session')->addError("Sorry, there was and error processing your payment.");
             $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
             
         }
@@ -325,12 +409,18 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
         return Mage::getStoreConfig($path, $storeId);
         
     }
-    
-    
-    private function dbg($message) {
+    // bJyivvJlVmQdwFtcrdFBFp6mjX0Xg10WQXc8OFvi
+    // URL	https://magento.dev/laybuypayments/payment/response/?status=DECLINED&token=7p28CGJCoDPR21RmKZO8VRzecQ6wtPzqwce9X4Zp
+    private function dbg($message, $prefix = '') {
         
         if($this->getConfigData('show_debug')){
-            Mage::log( $message);
+            if (is_null($this->tag)) {
+                $this->tag = uniqid();
+            }
+            if( !is_scalar($message) ){
+                $message = print_r($message,1);
+            }
+            Mage::log($this->tag .' -- ' .$prefix .' '. $message, NULL, self::LAYBUY_LOG_FILENAME );
         }
         
     }
@@ -372,8 +462,14 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
     private function orderDelete() {
         if (!is_null($this->order)) {
             Mage::register('isSecureArea', TRUE);
+    
+            $this->dbg("LAYBUY: DELETE ORDER ");
             $this->order->delete();
+            
             Mage::unregister('isSecureArea');
+        }
+        else {
+            $this->dbg("LAYBUY: DELETE ORDER -- NO ORDER TO DELETE -- ");
         }
     }
     
@@ -416,7 +512,7 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                 $quote->save();
             
             } catch (\Exception $e) {
-                Mage::log(__METHOD__ . " ERROR IN Quote service submitAll " . $e->getMessage());
+                $this->dbg(__METHOD__ . " ERROR IN Quote service submitAll " . $e->getMessage());
             }
         
             $this->order = $service->getOrder();

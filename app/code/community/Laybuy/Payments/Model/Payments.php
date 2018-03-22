@@ -436,10 +436,16 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         }
     }
     
-    private function dbg($message) {
+    private function dbg($message, $prefix = '') {
         
         if ($this->getConfigData('show_debug')) {
-            Mage::log($message);
+            if (is_null($this->tag)) {
+                $this->tag = uniqid();
+            }
+            if (!is_scalar($message)) {
+                $message = print_r($message, 1);
+            }
+            Mage::log($this->tag . ' -- ' . $prefix . ' ' . $message, NULL, self::LAYBUY_LOG_FILENAME);
         }
         
     }
