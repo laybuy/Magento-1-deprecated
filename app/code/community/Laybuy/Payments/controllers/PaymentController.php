@@ -40,6 +40,8 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
     //  GET /laybuypayments/payment/response/?status=SUCCESS&token=z8jFQf31BbRN3fEmjUbrxYZhQ6bwTtNNXoyCTpjo
     
     public function responseAction() {
+        $this->dbg(__METHOD__ . "  start id: " . ((isset($this->order)) ? $this->order->getId() : ' -not set- '));
+        
         $this->session = Mage::getSingleton('checkout/session');
         
         /* @var  $laybuyPayment  \Laybuy_Payments_Model_Payments */
@@ -269,7 +271,7 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
         
                 /** sets $this->quote \Mage_Sales_Model_Quote */
                 $this->setQuote($this->getLastQuoteId());
-        
+                
                 // Let customer know what's happened
                 Mage::getSingleton('core/session')->addError("Your Laybuy payment has been declined.");
         
@@ -304,8 +306,8 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
             $this->_redirect('checkout/onepage/failure', ['_secure' => TRUE]);
             
         }
-        
-        
+    
+        $this->dbg(__METHOD__ . "  end id: " . ((isset($this->order)) ? $this->order->getId() : ' -not set- '));
     }
     
     /**
@@ -460,16 +462,34 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
     }
     
     private function orderDelete() {
-        if (!is_null($this->order)) {
-            Mage::register('isSecureArea', TRUE);
+        if (!is_null($this->order) && $this->getConfigData('force_order_return')) {
     
-            $this->dbg("LAYBUY: DELETE ORDER ");
-            $this->order->delete();
+            Mage::register('isSecureArea', TRUE);
+            
+            if ($this->getConfigData('cancel_delete')) {
+                $this->dbg(__METHOD__ . " LAYBUY: CANCEL (not delete) ORDER ");
+                //$this->order->cancel();
+    
+                $this->order->registerCancellation();
+                
+                
+                $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATUS: " . $this->order->getStatus());
+                $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATE: " . $this->order->getState());
+                
+            }
+            else {
+                $this->dbg(__METHOD__. " LAYBUY: DELETE ORDER ");
+                $this->order->delete();
+            }
+            
+            $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATUS: " . $this->order->getStatus());
+            $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATE: " . $this->order->getState());
             
             Mage::unregister('isSecureArea');
+            
         }
         else {
-            $this->dbg("LAYBUY: DELETE ORDER -- NO ORDER TO DELETE -- ");
+            $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER -- NO ORDER TO DELETE -- ");
         }
     }
     

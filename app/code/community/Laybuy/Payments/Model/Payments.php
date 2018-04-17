@@ -91,6 +91,9 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     protected $endpoint;
     
+    /**
+     * @var $order  \Mage_Sales_Model_Order
+     */
     protected $order = NULL;
     
     protected $errors = [];
@@ -101,36 +104,41 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     }
     
     // main entry point
+    // this is called before we jump
     public function getOrderPlaceRedirectUrl() {
         // from the frontend tag in the modules config.xml
+        $this->dbg(__METHOD__ . "  start order-id: " . ((isset($this->order)) ? $this->order->getId() : ' -not set- '));
         
-        
-        $laybuy_order = $this->_makeLaybuyOrder();
-        $this->dbg('---------------- LAYBUY ORDER -------------------');
-        $this->dbg($laybuy_order);
-        $this->dbg('---------------- /LAYBUY ORDER ------------------');
+        $laybuy_order = $this->_makeLaybuyOrder(); // from session cart
         
         /** @var  $quote \Mage_Sales_Model_Quote */
         $quote = $this->getInfoInstance()->getQuote();
         $this->order = Mage::getModel('sales/order')->loadByIncrementId($laybuy_order->merchantReference);
         
-
         if($this->getConfigData('force_order_return')){
-            $this->dbg('---------------- LAYBUY ORDER -------------------\n  Force order on return set, delete existing order');
+            $this->dbg("---------------- LAYBUY -------------------\n   Force new order on return: delete existing order");
             $this->orderDelete();
             
             // if for new order is set we use the cart/quote to create a new order on return
+            $this->dbg("Force new order on return: set cart id to laybuy merchantReference");
+    
             $laybuy_order->merchantReference = $quote->getId();
         }
-        
-        
+    
+        $this->dbg('---------------- LAYBUY DATA -------------------');
+        $this->dbg($laybuy_order);
+        $this->dbg('---------------- /LAYBUY DATA ------------------');
+    
+    
         if (count($this->errors)) {
+            
             $message = join("\n", $this->errors);
+            
             $this->dbg('---------------- LAYBUY ERRORS -------------------');
             $this->dbg($laybuy_order);
             $this->dbg('---------------- /LAYBUY ERRORS ------------------');
             
-            // magento has already made the order, so remove it so we donr'tkeep any stock tied up
+            // magento has already made the order, so remove it so we don't keep any stock tied up
             $this->orderDelete();
             
             $quote = $this->getInfoInstance()->getQuote();
@@ -140,7 +148,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             //$this->_redirect('checkout/onepage'); //Redirect to cart & exists
             exit();
         }
-        
+    
+        $this->dbg(__METHOD__ . "  end order-id: " . ((isset($this->order)) ? $this->order->getId() : ' -not set- '));
         
         return $this->getLaybuyRedirectUrl($laybuy_order);
     }
@@ -173,12 +182,13 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             $shipping = $session->getQuote()->getShippingAddress();
         }
         
-        //$this->errors[] = 'This is another error.';
+        
         $order = new stdClass();
         
         $order->amount    = $quote->getGrandTotal();
         $order->currency  = "NZD";
         $order->returnUrl = Mage::getUrl('laybuypayments/payment/response', ['_secure' => TRUE]);
+        
         // BS $order->merchantReference = $quote->getId();
         $order->merchantReference = $quote->getReservedOrderId();
         
@@ -288,12 +298,21 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
      * @return void
      */
     public function initialize($paymentAction, $stateObject) {
+        // don't set these here this rolls over on return
+        //$stateObject->setState($this->getConfigData('unpaid_order_status'));
+        //$stateObject->setStatus($this->getConfigData('unpaid_order_status'));
+        //$stateObject->setIsNotified(FALSE);
+        $this->dbg(__METHOD__ . "  start order-id: " . ((isset($this->order)) ? $this->order->getId() : ' -not set- '));
+        $this->dbg(__METHOD__ . " START STATUS " . $stateObject->getStatus());
         
         $stateObject->setState($this->getConfigData('unpaid_order_status'));
         $stateObject->setStatus($this->getConfigData('unpaid_order_status'));
-        $stateObject->setIsNotified(FALSE);
-        $this->dbg(__METHOD__ . " " . $this->getConfigData('unpaid_order_status'));
-
+        
+        
+        $this->dbg(__METHOD__ . " STATUS " . $stateObject->getStatus());
+        $this->dbg(__METHOD__ . " STATE  " . $stateObject->setState());
+        $this->dbg(__METHOD__ . ' INITIALISED');
+        $this->dbg(__METHOD__ . " end order-id: " . ((isset($this->order)) ? $stateObject->order->getId() : ' -not set- '));
     }
     
     private function setupLaybuy() {
@@ -313,7 +332,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             $this->laybuy_apikey     = $this->getConfigData('live_apikey');
         }
         $this->dbg(__METHOD__ . ' CLIENT INIT: ' . $this->laybuy_merchantid . ":" . $this->laybuy_apikey);
-        $this->dbg(__METHOD__ . ' INITIALISED');
+        $this->dbg(__METHOD__ . ' SETUP COMPLETE ');
+        
     }
     
     private function getRestClient() {
@@ -429,11 +449,36 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
     
     
     private function orderDelete(){
-        if(!is_null($this->order)) {
+    
+        if (!is_null($this->order) && $this->getConfigData('force_order_return')) {
+        
             Mage::register('isSecureArea', TRUE);
-            $this->order->delete();
+        
+            if ($this->getConfigData('cancel_delete')) {
+                $this->dbg(__METHOD__ . " LAYBUY: CANCEL (not delete) ORDER ");
+                //$this->order->cancel();
+    
+                $this->order->registerCancellation();
+    
+                $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATUS: " . $this->order->getStatus());
+                
+                
+            }
+            else {
+                $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER ");
+                $this->order->delete();
+                $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER STATUS: " . $this->order->getStatus());
+    
+            }
+         
             Mage::unregister('isSecureArea');
+        
         }
+        else {
+            $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER -- NO ORDER TO DELETE -- ");
+        }
+        
+        
     }
     
     private function dbg($message, $prefix = '') {
