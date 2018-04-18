@@ -52,6 +52,9 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
      */
     protected $_canVoid = TRUE;
     
+    protected $_canCancelInvoice = TRUE;
+
+    
     /**
      * can admins use this payment method?
      */
@@ -457,8 +460,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             if ($this->getConfigData('cancel_delete')) {
                 $this->dbg(__METHOD__ . " LAYBUY: CANCEL (not delete) ORDER ");
                 //$this->order->cancel();
-    
-                $this->order->registerCancellation();
+                $this->order->cancel();
     
                 $this->dbg(__METHOD__ . " LAYBUY: CANCEL ORDER STATUS: " . $this->order->getStatus());
                 
@@ -466,6 +468,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             }
             else {
                 $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER ");
+                $this->order->cancel();
                 $this->order->delete();
                 $this->dbg(__METHOD__ . " LAYBUY: DELETE ORDER STATUS: " . $this->order->getStatus());
     
