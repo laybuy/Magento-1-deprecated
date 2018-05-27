@@ -189,7 +189,13 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $order = new stdClass();
         
         $order->amount    = $quote->getGrandTotal();
-        $order->currency  = "NZD";
+        $order->currency  = $this->getConfigData('currency'); //"NZD"; returns NULL if not found
+        
+        // check if this has been set, if not use NZD as this was teh hardcoded value before
+        if($order->currency === NULL){
+            $order->currency = "NZD";
+        }
+        
         $order->returnUrl = Mage::getUrl('laybuypayments/payment/response', ['_secure' => TRUE]);
         
         // BS $order->merchantReference = $quote->getId();
@@ -449,6 +455,42 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         Mage::app()->getResponse()->setBody(Mage::helper('core')->jsonEncode($result))->sendResponse();
         die();
     }
+    
+    
+    public function getCurrencyList(){
+        
+        if (NULL === $this->restClient) {
+            $this->getRestClient();
+        }
+    
+        $client = $this->restClient;
+    
+        // wrap in try?
+        $response = $client->restGet('/options/currencies');
+    
+        $result = json_decode($response->getBody());
+        
+        
+        $this->dbg(print_r($result, 1));
+        
+        $currencies = [];
+        
+        if(strtoupper($result->result) === "SUCCESS"
+           && isset($result->currencies)
+           && is_array($result->currencies)) {
+            
+            foreach ($result->currencies as $currency){
+                $currencies[ strtoupper($currency) ] = strtoupper($currency);
+            }
+            
+            return $currencies;
+        }
+        
+        return [];
+        
+        
+    }
+    
     
     
     private function orderDelete(){
