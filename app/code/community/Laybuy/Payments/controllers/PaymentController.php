@@ -95,7 +95,8 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                 //Mage::log($laybuy_order);
                 
                 /** sets $this->order \Mage_Sales_Model_Order */
-                $this->getOrder($this->laybuy_order->merchantReference);
+                $merchantReference = preg_replace('/_.*$/', '', $this->laybuy_order->merchantReference);
+                $this->getOrder($merchantReference);
               
                 $payment       = $this->order->getPayment();
                 $paymentMethod = $payment->getMethodInstance();
