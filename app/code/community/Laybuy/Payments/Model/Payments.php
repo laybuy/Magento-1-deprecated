@@ -116,7 +116,8 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
         /** @var  $quote \Mage_Sales_Model_Quote */
         $quote = $this->getInfoInstance()->getQuote();
-        $this->order = Mage::getModel('sales/order')->loadByIncrementId($laybuy_order->merchantReference);
+    
+        $this->order = Mage::getModel('sales/order')->loadByIncrementId($quote->getReservedOrderId());
         
         if($this->getConfigData('force_order_return')){
             $this->dbg("---------------- LAYBUY -------------------\n   Force new order on return: delete existing order");
@@ -125,7 +126,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
             // if for new order is set we use the cart/quote to create a new order on return
             $this->dbg("Force new order on return: set cart id to laybuy merchantReference");
     
-            $laybuy_order->merchantReference = $quote->getId();
+            $laybuy_order->merchantReference = $quote->getId() . '_' . uniqid() ;
         }
     
         $this->dbg('---------------- LAYBUY DATA -------------------');
@@ -199,7 +200,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         $order->returnUrl = Mage::getUrl('laybuypayments/payment/response', ['_secure' => TRUE]);
         
         // BS $order->merchantReference = $quote->getId();
-        $order->merchantReference = $quote->getReservedOrderId();
+        $order->merchantReference = $quote->getReservedOrderId() . '_' . uniqid();
         
         $order->customer            = new stdClass();
         $order->customer->firstName = $quote->getCustomerFirstname();
