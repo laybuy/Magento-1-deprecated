@@ -209,8 +209,12 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
         $phone = $address->getTelephone();
         
-        if ($phone == '' || strlen(preg_replace('/[^0-9+]/i', '', $phone)) <= 6) {
+        /*if ($phone == '' || strlen(preg_replace('/[^0-9+]/i', '', $phone)) <= 6) {
             $this->errors[] = 'Please provide a valid New Zealand phone number.';
+        }*/
+    
+        if (empty($phone) || $phone == '' || strlen(preg_replace('/[^0-9+]/i', '', $phone)) <= 6) {
+            $phone = "00 000 000";
         }
         
         $order->customer->phone = $phone;
