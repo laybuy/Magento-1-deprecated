@@ -104,6 +104,9 @@
                             <label>Return URL</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>100</sort_order>
+                            <comment>
+                                If you use checkout module which does not use the standard success url 'checkout/onepage/success', use this option to set the url. Do not include the a '/' at the start.
+                            </comment>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -122,6 +125,13 @@
                             <label>Force new order on return</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <comment>
+                                This removes the initial magento order before the customer is redirected to Laybuy,
+                                and makes a new order from the quote (cart) when the customer returns and the laybuy order is successfully
+                                confirmed (this can fail due to the 1st installment being declined).
+                                This is very helpful for low stock stores where there is only 1 item available. Please test this option,
+                                especially if you have other order processing modules installed.
+                            </comment>
                             <sort_order>120</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -133,6 +143,9 @@
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>130</sort_order>
+                            <comment>
+                               If you use the 'Force new order on return' option and have other order processing modules which do not like orders being deleted, try this option. Please test this carefully.
+                            </comment>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
