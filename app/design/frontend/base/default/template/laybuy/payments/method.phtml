@@ -13,6 +13,7 @@ $laybuy_payments = FALSE;
 
 if($total){
     $laybuy_payments = number_format( ($total / 6), 2, '.', ',');
+    $amounts = Mage::helper('core')->currency($laybuy_payments, true, false);
 }
 
 ?>
@@ -20,8 +21,8 @@ if($total){
     <li>
         <div style="padding: 10px 0;">
             <img style="display:inline-block;max-width: 200px;  vertical-align: middle" src="https://www.laybuy.com/images/laybuy-button.png" alt="">
-            <?php if($laybuy_payments): ?>
-            <h4 style="display:inline-block;padding-left: 15px">6 interest free payments from $<?= $laybuy_payments; ?></h4>
+            <?php if (isset($amounts)): ?>
+            <h4 style="display:inline-block;padding-left: 15px">6 interest free payments from <?php echo $amounts; ?></h4>
             <?php endif; ?>
         </div>
     
