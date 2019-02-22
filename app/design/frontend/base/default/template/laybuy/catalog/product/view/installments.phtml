@@ -1,0 +1,56 @@
+<?php  if (Mage::helper('core')->isModuleEnabled('Laybuy_Payments')
+        && Mage::getStoreConfig('payment/laybuy_payments/active')) : ?>
+    <?php
+        $product = Mage::registry('current_product');
+        $price = ($product) ? $product->getFinalPrice() : null;
+    ?>
+    <?php if ($price) : ?>
+    <div class="laybuy_payments-installments">
+        <?php echo $this->__('Or 6 payments of '); ?>
+        <b><?php echo Mage::helper('core')->currency($price / 6, true, false); ?></b>
+        <?php echo $this->__(' with '); ?>
+        <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy_logo.svg'); ?>">
+        <a rel="nofollow" href="#" id="laybuy-learn-more-open"><?php echo $this->__('What\'s this?'); ?></a>
+    </div>
+    <script type="text/javascript">
+        var currencySymbol = '<?php echo Mage::app()->getLocale()->currency(Mage::app()->getStore()->getCurrentCurrencyCode())->getSymbol() ?>';
+        Product.OptionsPrice.prototype.reload = Product.OptionsPrice.prototype.reload.wrap(function (callOriginal) {
+            callOriginal();
+            var price = parseFloat(jQuery('#product-price-<?php echo $product->getId();?>.regular-price .price').text().replace(/[^\d.]/g, ''));
+            if (price == NaN) {
+                return;
+            }
+            price = (price/6).toFixed(2);
+            jQuery('.laybuy_payments-installments').find('b').replaceWith('<b>' + currencySymbol + price + '</b>');
+        });
+    </script>
+    <div id="laybuy-learn-more" class="laybuy-modal" style="display: none;">
+        <div class="laybuy_header__laybuy-logo">
+            <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy_logo_grape_black.svg'); ?>">
+        </div>
+        <div class="laybuy-container">
+            <h2 class="heading"><?php echo $this->__('Receive your purchase now, spread the total cost over 6 weekly automatic payments. Interest free!') ?></h2>
+        </div>
+        <div class="laybuy-footer">
+            <div class="laybuy_footer-wrapper">
+                <div class="laybuy-footer__img laybuy-icon__cart">
+                    <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-cart.png'); ?>">
+                    <p>Simply select <b>Pay by Laybuy</b> at checkout</p>
+                </div>
+                <div class="laybuy-footer__img laybuy-icon__mobile">
+                    <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-mobile.png'); ?>">
+                    <p><?php echo $this->__('Login or Register for Laybuy and complete your order in seconds') ?></p>
+                </div>
+                <div class="laybuy-footer__img laybuy-icon__cc">
+                    <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-cc.png'); ?>">
+                    <p><?php echo $this->__('Complete your purchase using an existing debit or credit card') ?></p>
+                </div>
+                <div class="laybuy-footer__img laybuy-icon__laybuy">
+                    <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-laybuy.png'); ?>">
+                    <p><?php echo $this->__('Pay over 6 weeks and receive your purchase now') ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+<?php endif; ?>

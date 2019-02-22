@@ -56,5 +56,12 @@
                 </args>
             </payments>
         </routers>
+        <layout>
+            <updates>
+                <payments>
+                    <file>laybuy.xml</file>
+                </payments>
+            </updates>
+        </layout>
     </frontend>
 </config>

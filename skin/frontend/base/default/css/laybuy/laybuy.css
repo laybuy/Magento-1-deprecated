@@ -1,0 +1,70 @@
+.laybuy_payments-installments {
+    margin-top: 10px;
+    padding: 5px 0;
+    font-size: 11px;
+}
+.laybuy_payments-installments img {
+    display: inline-block;
+    max-width: 20px;
+    width: 20px;
+    height: 16px;
+    margin: -2px 5px 0;
+}
+#laybuy-learn-more-open {
+    font-size: 10px;
+    text-decoration: underline;
+    color: #bababa;
+}
+#laybuy-learn-more .laybuy-header ._title {
+    text-align: center;
+    padding-top: 15px;
+}
+#laybuy-learn-more .laybuy-container .heading {
+    max-width: 425px;
+    width: 100%;
+    color: #786dff;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 21px;
+    margin: 0 auto 25px;
+    text-align: center;
+}
+#laybuy-learn-more .laybuy-footer {
+    padding-top: 15px;
+}
+#laybuy-learn-more .laybuy-content {
+    text-align: center;
+    line-height: 20px;
+    padding: 0 20px;
+}
+#laybuy-learn-more .laybuy_header__laybuy-logo,
+#laybuy-learn-more .laybuy_footer-wrapper {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+}
+#laybuy-learn-more .laybuy_header__laybuy-logo {
+    padding: 0 0 15px;
+}
+#laybuy-learn-more .laybuy_header__laybuy-logo img {
+    max-width: 130px;
+    width: 130px;
+    margin: 0 auto;
+}
+#laybuy-learn-more .laybuy-footer__img {
+    display: inline-block;
+    text-align: center;
+    float: left;
+    width: calc(100% / 4);
+}
+#laybuy-learn-more .laybuy-footer__img p {
+    line-height: 18px;
+    font-size: 12px;
+    padding: 0 15px;
+}
+#laybuy-learn-more .laybuy-footer__img img {
+    width: 50px;
+    max-width: 50px;
+    height: 50px;
+    margin: 0 auto 15px;
+}

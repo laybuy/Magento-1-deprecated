@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <catalog_product_view>
+        <reference name="head">
+            <action method="addCss" ifconfig="payment/laybuy_payments/active"><stylesheet>css/laybuy/laybuy.css</stylesheet></action>
+            <action method="addItem" ifconfig="payment/laybuy_payments/active"><type>skin_css</type><name>css/jquery/jquery-ui.css</name></action>
+            <action method="addItem" ifconfig="payment/laybuy_payments/active"><type>skin_js</type><name>js/laybuy/laybuy.js</name></action>
+            <action method="addItem" ifconfig="payment/laybuy_payments/active"><type>skin_js</type><name>js/jquery/jquery-ui.min.js</name><params/></action>
+        </reference>
+        <reference name="product.info">
+            <block type="core/template" name="laybuy.payments.installments" as="laybuy_payments_installments" template="laybuy_payments/catalog/product/view/installments.phtml"/>
+        </reference>
+    </catalog_product_view>
+</layout>
