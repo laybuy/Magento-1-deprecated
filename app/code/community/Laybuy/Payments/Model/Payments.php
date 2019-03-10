@@ -331,7 +331,7 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
         
         $this->dbg(__METHOD__ . " STATUS " . $stateObject->getStatus());
-        $this->dbg(__METHOD__ . " STATE  " . $stateObject->setState());
+        $this->dbg(__METHOD__ . " STATE  " . $stateObject->getState());
         $this->dbg(__METHOD__ . ' INITIALISED');
         $this->dbg(__METHOD__ . " end order-id: " . ((isset($this->order)) ? $stateObject->order->getId() : ' -not set- '));
     }
