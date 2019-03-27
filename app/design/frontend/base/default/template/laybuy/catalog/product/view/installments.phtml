@@ -16,7 +16,11 @@
         var currencySymbol = '<?php echo Mage::app()->getLocale()->currency(Mage::app()->getStore()->getCurrentCurrencyCode())->getSymbol() ?>';
         Product.OptionsPrice.prototype.reload = Product.OptionsPrice.prototype.reload.wrap(function (callOriginal) {
             callOriginal();
-            var price = parseFloat(jQuery('#product-price-<?php echo $product->getId();?>.regular-price .price').text().replace(/[^\d.]/g, ''));
+            var priceText = jQuery('#product-price-<?php echo $product->getId();?>.regular-price .price').text();
+            if (!priceText) {
+                priceText = jQuery('#product-price-<?php echo $product->getId();?>.price').text();
+            }
+            var price = parseFloat(priceText.replace(/[^\d.]/g, ''));
             if (price == NaN) {
                 return;
             }
