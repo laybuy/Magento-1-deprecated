@@ -203,6 +203,11 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         if($order->currency === NULL){
             $order->currency = "NZD";
         }
+
+        // Tax is required for merchants who do not use the default tax rate and are from the United Kingdom
+        if ($quote->getShippingAddress()->getTaxAmount() || $order->currency == 'GBP') {
+            $order->tax = $quote->getShippingAddress()->getTaxAmount();
+        }
         
         $order->returnUrl = Mage::getUrl('laybuypayments/payment/response', ['_secure' => TRUE]);
         
