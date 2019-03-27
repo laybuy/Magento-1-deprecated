@@ -309,12 +309,6 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
     }
     
-    
-    public function isAvailable($quote = NULL) {
-        
-        return $this->getConfigData('active') ? TRUE : FALSE;
-    }
-    
     /**
      * Instantiate state and set it to state object
      *
