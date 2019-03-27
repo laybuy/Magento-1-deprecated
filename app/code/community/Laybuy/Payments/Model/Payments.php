@@ -196,13 +196,23 @@ class Laybuy_Payments_Model_Payments extends Mage_Payment_Model_Method_Abstract 
         
         $order = new stdClass();
         
-        $order->amount    = $quote->getGrandTotal();
+        $order->amount    = number_format($quote->getGrandTotal(), 2, '.', '');
         $order->currency  = $this->getConfigData('currency'); //"NZD"; returns NULL if not found
         
         // check if this has been set, if not use NZD as this was teh hardcoded value before
         if($order->currency === NULL){
             $order->currency = "NZD";
         }
+
+        $order->tax = 0;
+
+        if ($order->currency == 'GBP') {
+            $taxtotal = $quote->getShippingAddress()->getTaxAmount();
+            if (isset($taxtotal) && $taxtotal) {
+                $order->tax = number_format($taxtotal, 2, '.', '');
+            }
+        }
+        //Mage::log($quote->getShippingAddress()->getTaxAmount());
         
         $order->returnUrl = Mage::getUrl('laybuypayments/payment/response', ['_secure' => TRUE]);
         
