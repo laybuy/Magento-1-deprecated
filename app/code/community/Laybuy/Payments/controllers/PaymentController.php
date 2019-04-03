@@ -621,12 +621,6 @@ class Laybuy_Payments_PaymentController extends Mage_Core_Controller_Front_Actio
                     throw Mage::exception('Laybuy_Payments', "Order can not be retrieved: " . $order_id);
                 }
             }
-            else {
-                // mark the session with the correct order id
-                $this->session->setLastOrderId($order_id)->setLastRealOrderId((string) $order_id);
-            }
-            
-        
         }
         
         
