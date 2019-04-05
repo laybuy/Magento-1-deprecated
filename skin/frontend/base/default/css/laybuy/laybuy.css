@@ -68,3 +68,19 @@
     height: 50px;
     margin: 0 auto 15px;
 }
+
+#payment_form_laybuy_payments #laybuy-learn-more {
+    margin-top: 10px;
+    max-width: 525px;
+}
+
+#payment_form_laybuy_payments .laybuy_header__laybuy-logo {
+    margin-top: 10px;
+}
+#payment_form_laybuy_payments #laybuy-learn-more .laybuy_header__laybuy-logo img {
+    margin: 0;
+}
+
+#payment_form_laybuy_payments #laybuy-learn-more .laybuy-container {
+    color: #786dff;
+}

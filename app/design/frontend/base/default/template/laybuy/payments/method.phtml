@@ -15,20 +15,42 @@ if($total){
     $laybuy_payments = number_format( ($total / 6), 2, '.', ',');
     $amounts = Mage::helper('core')->currency($laybuy_payments, true, false);
 }
-
 ?>
 <ul class="form-list" id="payment_form_<?php echo $this->getMethodCode(); ?>" style="display: none;">
     <li>
-        <div style="padding: 10px 0;">
-            <img style="display:inline-block;max-width: 200px;  vertical-align: middle" src="https://www.laybuy.com/images/laybuy-button.png" alt="">
-            <?php if (isset($amounts)): ?>
-            <h4 style="display:inline-block;padding-left: 15px">6 interest free payments from <?php echo $amounts; ?></h4>
-            <?php endif; ?>
+        <div id="laybuy-learn-more" class="laybuy-modal">
+            <div>
+                <?php if($laybuy_payments): ?>
+                    <p><strong>6</strong> interest free payments of <strong><?php echo $amounts ?></strong></p>
+                <?php endif; ?>
+            </div>
+            <div class="laybuy_header__laybuy-logo">
+                <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy_logo_grape_black.svg'); ?>">
+            </div>
+            <div class="laybuy-container">
+                <p><?php echo $this->__('Receive your purchase now, spread the total cost over 6 weekly automatic payments. Interest free!') ?></p>
+            </div>
+            <div class="laybuy-footer">
+                <div class="laybuy_footer-wrapper">
+                    <div class="laybuy-footer__img laybuy-icon__cart">
+                        <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-cart.png'); ?>">
+                        <p>Simply select <b>Pay by Laybuy</b> at checkout</p>
+                    </div>
+                    <div class="laybuy-footer__img laybuy-icon__mobile">
+                        <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-mobile.png'); ?>">
+                        <p><?php echo $this->__('Login or Register for Laybuy and complete your order in seconds') ?></p>
+                    </div>
+                    <div class="laybuy-footer__img laybuy-icon__cc">
+                        <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-cc.png'); ?>">
+                        <p><?php echo $this->__('Complete your purchase using an existing debit or credit card') ?></p>
+                    </div>
+                    <div class="laybuy-footer__img laybuy-icon__laybuy">
+                        <img src="<?php echo $this->getSkinUrl('images/laybuy/laybuy-laybuy.png'); ?>">
+                        <p><?php echo $this->__('Pay over 6 weeks and receive your purchase now') ?></p>
+                    </div>
+                </div>
+            </div>
         </div>
-    
-        <p>Laybuy lets you receive your purchase now and spread the total cost over 6 weekly automatic payments. Interest free.</p>
-        <p>Available to NZ, AU or UK residents who are 18 years and over and have a valid debit or credit card.</p>
-        <p>By selecting &lsquo;LAYBUY&rsquo; you will be redirected to Laybuy to complete your order</p>
     </li>
 </ul>
 

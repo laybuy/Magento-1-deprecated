@@ -11,4 +11,10 @@
             <block type="core/template" name="laybuy.payments.installments" as="laybuy_payments_installments" template="laybuy/catalog/product/view/installments.phtml"/>
         </reference>
     </catalog_product_view>
+
+    <checkout_onepage_index>
+        <reference name="head">
+            <action method="addCss" ifconfig="payment/laybuy_payments/active"><stylesheet>css/laybuy/laybuy.css</stylesheet></action>
+        </reference>
+    </checkout_onepage_index>
 </layout>
